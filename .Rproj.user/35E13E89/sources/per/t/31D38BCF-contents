@@ -1,0 +1,35 @@
+library(tidyverse)
+library(caret)
+
+theme_set(theme_classic())
+
+d = read.csv("C:/Users/Bruker/Desktop/FRET/Results.csv", sep=",", dec=".")
+
+
+
+
+library(ggplot2)
+theme_set(theme_bw())
+pl <- ggplot(d) + geom_point(aes(x=slice.size, y=intensity), size=2, colour="#993399") + 
+  xlab("gray scale") + ylab("time (500ms")  
+print(pl)
+
+training.samples <- d$intensity %>%
+  createDataPartition(p = 0.8, list = FALSE)
+train.data  <- d[training.samples, ]
+test.data <- d[-training.samples, ]
+
+# Build the model
+model <- lm(intensity ~ poly(slice.size, 5, raw = TRUE), data = train.data)
+# Make predictions
+predictions <- model %>% predict(test.data)
+# Model performance
+modelPerfomance = data.frame(
+  RMSE = RMSE(predictions, test.data$intensity),
+  R2 = R2(predictions, test.data$intensity)
+)
+
+print(modelPerfomance)
+
+ggplot(train.data, aes(slice.size, intensity) ) + geom_point() + 
+  stat_smooth(method = lm, formula = y ~ poly(x, 5, raw = TRUE))
